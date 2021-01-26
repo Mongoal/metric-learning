@@ -44,6 +44,9 @@ from tensorflow.python.ops import data_flow_ops
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
 
+from prepare_v03 import myfft2
+
+
 def main(args):
   
     network = importlib.import_module(args.model_def)
@@ -314,6 +317,8 @@ def train(args, sess, data_idx_list, label_list,data, epoch,  data_placeholder, 
         start_time = time.time()
         cur_iidx = shuffle_iidx[batch_number*args.batch_size:batch_number*args.batch_size + args.batch_size]
         X_batch = data[data_idx_list[cur_iidx]]
+        X_batch = np.asarray([myfft2(s,128, 255, 64, False) for s in X_batch])
+
         y_batch = label_list[cur_iidx]
         feed_dict = {learning_rate_placeholder: lr, phase_train_placeholder:True, data_placeholder: X_batch, labels_placeholder:y_batch}
         tensor_list = [loss, train_op, step, reg_losses, prelogits, cross_entropy_mean, learning_rate, prelogits_norm, accuracy, prelogits_center_loss]
@@ -364,6 +369,7 @@ def validate(args, sess, data_idx_list, label_list, data, epoch,  data_placehold
     for i in range(nrof_batches):
         cur_idx = i*args.batch_size
         X_batch = data[data_idx_list[cur_idx:cur_idx+args.batch_size]]
+        X_batch = np.asarray([myfft2(s,128, 255, 64, False) for s in X_batch])
         y_batch = label_list[cur_idx:cur_idx+args.batch_size]
         feed_dict = {phase_train_placeholder:False, data_placeholder: X_batch, labels_placeholder:y_batch}
         loss_, cross_entropy_mean_, accuracy_ = sess.run([loss, cross_entropy_mean, accuracy], feed_dict=feed_dict)
