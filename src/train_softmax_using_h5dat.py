@@ -475,11 +475,13 @@ def save_variables_and_metagraph(sess, saver, summary_writer, model_dir, model_n
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
-    
-    parser.add_argument('--logs_base_dir', type=str, 
-        help='Directory where to write event logs.', default='~/logs/facenet')
+    parser.add_argument('--include_labels', type=int, nargs='+',
+        help='train and test set labels range',
+        default=[])
+    parser.add_argument('--logs_base_dir', type=str,
+        help='Directory where to write event logs.', default='/userhome/code/result/logs/centerloss')
     parser.add_argument('--models_base_dir', type=str,
-        help='Directory where to write trained models and checkpoints.', default='~/models/facenet')
+        help='Directory where to write trained models and checkpoints.', default='/userhome/code/result/models/centerloss')
     parser.add_argument('--gpu_memory_fraction', type=float,
         help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
     parser.add_argument('--pretrained_model', type=str,
