@@ -258,7 +258,7 @@ def main(args):
 
                 print('Saving statistics')
                 with h5py.File(stat_file_name, 'w') as f:
-                    for key, value in stat.iteritems():
+                    for key, value in stat.items():
                         f.create_dataset(key, data=value)
     
     return model_dir
@@ -311,15 +311,15 @@ def train(args, sess, data_idx_list, label_list,data, epoch,  data_placeholder, 
 
     # Training loop
     train_time = 0
-    shuffle_iidx = np.random.shuffle(len(data_idx_list))
+    shuffle_iidx = np.random.permutation(len(data_idx_list))
     epoch_size = len(data_idx_list)//args.batch_size -1
     while batch_number < epoch_size:
         start_time = time.time()
         cur_iidx = shuffle_iidx[batch_number*args.batch_size:batch_number*args.batch_size + args.batch_size]
-        X_batch = data[data_idx_list[cur_iidx]]
+        X_batch = [data[data_idx_list[i]] for i in cur_iidx ]
         X_batch = np.asarray([myfft2(s,128, 255, 64, False) for s in X_batch])
 
-        y_batch = label_list[cur_iidx]
+        y_batch = [label_list[i] for i in cur_iidx]
         feed_dict = {learning_rate_placeholder: lr, phase_train_placeholder:True, data_placeholder: X_batch, labels_placeholder:y_batch}
         tensor_list = [loss, train_op, step, reg_losses, prelogits, cross_entropy_mean, learning_rate, prelogits_norm, accuracy, prelogits_center_loss]
         if batch_number % 100 == 0:
@@ -368,7 +368,7 @@ def validate(args, sess, data_idx_list, label_list, data, epoch,  data_placehold
     start_time = time.time()
     for i in range(nrof_batches):
         cur_idx = i*args.batch_size
-        X_batch = data[data_idx_list[cur_idx:cur_idx+args.batch_size]]
+        X_batch = [data[i] for i in data_idx_list[cur_idx:cur_idx+args.batch_size]]
         X_batch = np.asarray([myfft2(s,128, 255, 64, False) for s in X_batch])
         y_batch = label_list[cur_idx:cur_idx+args.batch_size]
         feed_dict = {phase_train_placeholder:False, data_placeholder: X_batch, labels_placeholder:y_batch}
