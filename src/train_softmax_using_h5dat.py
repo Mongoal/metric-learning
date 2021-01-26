@@ -157,7 +157,7 @@ def main(args):
         tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, prelogits_norm * args.prelogits_norm_loss_factor)
 
         # Add center loss
-        prelogits_center_loss, _ = facenet.center_loss(prelogits, labels_placeholder, args.center_loss_alfa, nrof_classes)
+        prelogits_center_loss, centers_update_op = facenet.center_loss(prelogits, labels_placeholder, args.center_loss_alfa, nrof_classes)
         tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, prelogits_center_loss * args.center_loss_factor)
 
         learning_rate = tf.train.exponential_decay(learning_rate_placeholder, global_step,
@@ -230,7 +230,7 @@ def main(args):
                 t = time.time()
                 cont = train(args, sess, image_list, label_list, data, epoch ,data_placeholder, labels_placeholder,
                     learning_rate_placeholder, phase_train_placeholder, global_step,
-                    total_loss, train_op, summary_op, summary_writer, regularization_losses, args.learning_rate_schedule_file,
+                    total_loss, train_op,centers_update_op, summary_op, summary_writer, regularization_losses, args.learning_rate_schedule_file,
                     stat, cross_entropy_mean, accuracy, learning_rate,
                     prelogits, prelogits_center_loss,  prelogits_norm, args.prelogits_hist_max)
                 stat['time_train'][epoch-1] = time.time() - t
@@ -296,7 +296,7 @@ def filter_dataset(dataset, data_filename, percentile, min_nrof_images_per_class
   
 def train(args, sess, data_idx_list, label_list,data, epoch,  data_placeholder, labels_placeholder,
       learning_rate_placeholder, phase_train_placeholder,  step,
-      loss, train_op, summary_op, summary_writer, reg_losses, learning_rate_schedule_file, 
+      loss, train_op,centers_update_op, summary_op, summary_writer, reg_losses, learning_rate_schedule_file,
       stat, cross_entropy_mean, accuracy, 
       learning_rate, prelogits, prelogits_center_loss, prelogits_norm, prelogits_hist_max):
     batch_number = 0
@@ -321,12 +321,12 @@ def train(args, sess, data_idx_list, label_list,data, epoch,  data_placeholder, 
 
         y_batch = [label_list[i] for i in cur_iidx]
         feed_dict = {learning_rate_placeholder: lr, phase_train_placeholder:True, data_placeholder: X_batch, labels_placeholder:y_batch}
-        tensor_list = [loss, train_op, step, reg_losses, prelogits, cross_entropy_mean, learning_rate, prelogits_norm, accuracy, prelogits_center_loss]
+        tensor_list = [loss, centers_update_op,train_op, step, reg_losses, prelogits, cross_entropy_mean, learning_rate, prelogits_norm, accuracy, prelogits_center_loss]
         if batch_number % 100 == 0:
-            loss_, _, step_, reg_losses_, prelogits_, cross_entropy_mean_, lr_, prelogits_norm_, accuracy_, center_loss_, summary_str = sess.run(tensor_list + [summary_op], feed_dict=feed_dict)
+            loss_, _,_, step_, reg_losses_, prelogits_, cross_entropy_mean_, lr_, prelogits_norm_, accuracy_, center_loss_, summary_str = sess.run(tensor_list + [summary_op], feed_dict=feed_dict)
             summary_writer.add_summary(summary_str, global_step=step_)
         else:
-            loss_, _, step_, reg_losses_, prelogits_, cross_entropy_mean_, lr_, prelogits_norm_, accuracy_, center_loss_ = sess.run(tensor_list, feed_dict=feed_dict)
+            loss_,_, _, step_, reg_losses_, prelogits_, cross_entropy_mean_, lr_, prelogits_norm_, accuracy_, center_loss_ = sess.run(tensor_list, feed_dict=feed_dict)
          
         duration = time.time() - start_time
         stat['loss'][step_-1] = loss_
