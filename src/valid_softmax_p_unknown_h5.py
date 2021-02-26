@@ -46,14 +46,18 @@ modelname = args.modelname
 h5path = args.h5path
 batch_size = 128
 modelpath = '/userhome/code/result/models/'+modelname
-modelpath = ''+modelname
 np.random.seed(seed=666)
-h5f = h5py.File(h5path, 'r')
-data = h5f['signal'][:]
+# 读取预存softmax而不打开原始数据文件
+if not os.path.exists(f'softmax_label_{os.path.basename(modelname)}_{os.path.basename(h5path)}.h5'):
+    h5f = h5py.File(h5path, 'r')
+    data = h5f['signal']
+else:
+    h5f = h5py.File(f'softmax_label_{os.path.basename(modelname)}_{os.path.basename(h5path)}.h5', 'r')
+
 labels = h5f['labels'][:]
-dataset = facenet.get_dataset_idx_from_h5f(h5f, 'labels', 'imsi', include_labels=train_labels)
+dataset = facenet.get_dataset_idx_from_h5f(h5f, 'labels', 'labels', include_labels=train_labels)
 train_set, eval_set = facenet.split_dataset(dataset, 0.3, 1, 'SPLIT_IMAGES')
-unknown_set = facenet.get_dataset_idx_from_h5f(h5f, 'labels', 'imsi', include_labels=unknown_labels)
+unknown_set = facenet.get_dataset_idx_from_h5f(h5f, 'labels', 'labels', include_labels=unknown_labels)
 nTrain = sum([len(specClass) for specClass in train_set])
 nEval = sum([len(specClass) for specClass in eval_set])
 nUnknown = sum([len(specClass) for specClass in unknown_set])
@@ -137,7 +141,7 @@ train_acc = np.zeros(len(p_thres))
 test_acc = np.zeros(len(p_thres))
 unknown_acc = np.zeros(len(p_thres))
 for pi, p_thre in enumerate(p_thres):
-    print(f'***************\np_thre = {p_thre}\n**************')
+    print(f'***************\np_thre = {p_thre}\n**************',flush=True)
     is_unknown = probs < p_thre
     pred = np.where(is_unknown, -1, pred)
     train_pred_right = []
