@@ -211,12 +211,12 @@ def train(args, sess, dataset, data, labels, epoch, data_placeholder, labels_pla
         print('%.3f' % (time.time()-start_time))
 
         # Select triplets based on the embeddings
-        print('Selecting suitable triplets for training')
-        triplets, nrof_random_negs, nrof_triplets = select_triplets(emb_array, num_per_class, 
+        print('Selecting suitable triplets for training',flush=True)
+        triplets, nrof_random_negs, nrof_triplets = select_triplets(emb_array, num_per_class,
             image_paths, args.people_per_batch, args.alpha)
         selection_time = time.time() - start_time
         print('(nrof_random_negs, nrof_triplets) = (%d, %d): time=%.3f seconds' % 
-            (nrof_random_negs, nrof_triplets, selection_time))
+            (nrof_random_negs, nrof_triplets, selection_time),flush=True)
 
         # Perform training on the selected triplets
         nrof_batches = int(np.ceil(nrof_triplets*3/args.batch_size))
