@@ -69,7 +69,7 @@ def main(args):
 
     np.random.seed(seed=args.seed)
     h5f = h5py.File(args.data_dir,'r')
-    data = h5f['signal'].value
+    data = h5f['signal']
     labels = h5f['labels'].value
     include_labels = args.include_labels if args.include_labels else 'ALL'
     dataset = facenet.get_dataset_idx_from_h5f(h5f,'labels','imsi',include_labels=include_labels)
@@ -187,7 +187,7 @@ def train(args, sess, dataset, data, labels, epoch, data_placeholder, labels_pla
     while batch_number < args.epoch_size:
         # Sample people randomly from the dataset
         image_paths, num_per_class = sample_people(dataset, args.people_per_batch, args.images_per_person)
-        signals = data[image_paths]
+        signals = [data[idx] for idx in image_paths]
         lab = labels[image_paths]
         # print('label',lab)
         # print('num_per_class',num_per_class)
@@ -339,7 +339,7 @@ def evaluate(sess, pairs, data, labels, embeddings, labels_batch, data_placehold
     for i in xrange(nrof_batches):
         ist = i * batch_size
         ied = min(ist + batch_size,nrof_examples)
-        signals = data[idxes[ist:ied]]
+        signals =[data[idx] for idx in idxes[ist:ied]]
         stfts = [myfft2(s, 128, 255, 64, False) for s in signals]
         emb = sess.run(embeddings, feed_dict={data_placeholder: stfts,
             learning_rate_placeholder: 0.0, phase_train_placeholder: False})
